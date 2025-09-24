@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARKET PAY - Transaction Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #4A90E2; /* A professional blue */
+            --primary-hover-color: #357ABD;
+            --smart-action-color: #50E3C2; /* A vibrant, modern teal for smart actions */
+            --smart-action-hover: #38bda0;
+            --danger-color: #D0021B;
+            --light-gray: #f7f8fc;
+            --medium-gray: #e8eaf1;
+            --dark-gray: #8a94a6;
+            --text-color: #333d4e;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.04), 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- General Styles & Fonts --- */
+        body {
+            font-family: 'Poppins', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        /* --- Main App Container --- */
+        .app-container {
+            max-width: 1400px;
+            margin: auto;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2rem 2.5rem;
+            background: linear-gradient(135deg, #2b324d, #3c4c64);
+            color: #fff;
+        }
+        .header-title {
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .header-title strong { font-weight: 700; color: var(--smart-action-color); }
+
+        /* --- Controls & Inputs --- */
+        .controls-panel { padding: 2.5rem; }
+        .control-section {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            align-items: center;
+            gap: 20px;
+            padding: 1.5rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+        }
+        .control-section label {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+        .control-section input[type="file"], .control-section select {
+            font-size: 1rem;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--medium-gray);
+            background-color: #fff;
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .control-section select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+        }
+        .control-section input[type="file"]::file-selector-button {
+            display: none;
+        }
+        .control-section input[type="file"]:hover, .control-section select:hover {
+            border-color: var(--primary-color);
+        }
+        .control-section input[type="file"]:focus, .control-section select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        #status {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        #reports-section { display: none; }
+        .button-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 1rem 0;
+            border-top: 1px solid var(--medium-gray);
+            margin-top: 2rem;
+        }
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            padding: 12px 25px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease-in-out;
+            min-width: 240px; 
+            background-color: #fff;
+            color: var(--primary-color);
+            border: 1px solid var(--medium-gray);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .btn:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .btn:disabled {
+            background: var(--medium-gray);
+            color: var(--dark-gray);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+            border-color: var(--medium-gray);
+        }
+        .btn-reset {
+            min-width: auto;
+            background-color: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            opacity: 0.8;
+        }
+        .btn-reset:hover {
+            background-color: #fff;
+            color: #333;
+            opacity: 1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255,255,255,0.2);
+        }
+        
+        .btn-smart {
+            background-color: var(--smart-action-color);
+            border-color: var(--smart-action-color);
+            color: #fff;
+            font-weight: 700;
+        }
+        .btn-smart:hover { 
+            background-color: var(--smart-action-hover);
+            border-color: var(--smart-action-hover);
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(80, 227, 194, 0.3);
+        }
+
+        /* --- Report Display Area --- */
+        #report-container { padding: 0 2.5rem 2.5rem 2.5rem; }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--medium-gray);
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+        }
+        .report-header h2 {
+            font-size: 1.75rem;
+            color: var(--text-color);
+            font-weight: 600;
+            margin: 0;
+        }
+        .report-header .btn-export {
+            min-width: auto;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+        }
+        .report-header .btn-export:hover {
+            background-color: var(--primary-hover-color);
+            border-color: var(--primary-hover-color);
+        }
+        .report-section {
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .chart-table-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+        .chart-container { max-height: 500px; }
+        @media (max-width: 992px) { .chart-table-grid { grid-template-columns: 1fr; } }
+        
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; margin-top: 0; }
+        th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--medium-gray); }
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--dark-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            position: relative;
+        }
+        th .sort-indicator { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.8em; color: #888; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background-color: #f9fafb; }
+        .color-cell { color: white; font-weight: bold; }
+        
+        /* Smart Analysis Styles */
+        .smart-summary .summary-card {
+            background-image: linear-gradient(to right, #f8f9fa, #fff);
+            border-left: 5px solid var(--primary-color);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: var(--border-radius);
+        }
+        .smart-summary .summary-card h3 { margin-top: 0; color: var(--primary-color); }
+        .smart-summary .issue-card {
+            border-left-color: var(--danger-color);
+            padding: 1.5rem 2rem;
+        }
+        .smart-summary .issue-card h3 { font-size: 1.4rem; margin: 0 0 1rem 0; color: var(--danger-color); }
+        .smart-summary .quick-stats { display: flex; gap: 2rem; background: var(--light-gray); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--medium-gray); }
+        .smart-summary .stat { text-align: center; flex: 1; }
+        .smart-summary .stat .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--danger-color); }
+        .smart-summary .stat .stat-label { font-size: 0.85rem; color: var(--dark-gray); }
+        .smart-summary .stat .stat-value.neutral { color: var(--text-color); }
+        .smart-summary .root-cause-section h4, .smart-summary .focus-section h4 { font-size: 1.1rem; color: #2c5364; margin-bottom: 0.5rem; }
+        .smart-summary ul { list-style-type: '⚡️'; padding-left: 20px; }
+        .smart-summary ul li { padding-left: 10px; margin-bottom: 0.5rem; }
+        .smart-summary .focus-section { margin-top: 1.5rem; padding: 1rem; border-radius: 8px; background: #fdf6ec; border: 1px solid #fbe7d0; }
+        .smart-summary .focus-section h4 { color: #c57d1d; }
+        .smart-summary .focus-section p { margin: 0; font-weight: 500; color: #c57d1d;}
+
+        /* Loader */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; margin-right: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="app-header">
+            <h1 class="header-title">MARKET<strong>PAY</strong></h1>
+            <button id="reset-app-btn" class="btn btn-reset" title="Reset the application">Reset</button>
+        </header>
+
+        <main class="controls-panel">
+            <div class="control-section">
+                <label for="file-upload">Upload Eportal Data</label>
+                <input type="file" id="file-upload" accept=".xlsx, .xls, .csv">
+            </div>
+            <div class="control-section">
+                <label for="country-select">Select Country</label>
+                <select id="country-select">
+                    <option value="" disabled selected>-- Select a Country --</option>
+                    <option value="france">CRF France</option>
+                    <option value="belgium">CRF Belgium</option>
+                    <option value="spain">CRF Spain</option>
+                    <option value="italy">CRF Italy</option>
+                </select>
+            </div>
+            <div id="status">Please upload a file and select a country to begin.</div>
+            
+            <div id="reports-section">
+                <h2 style="margin-top: 2rem; margin-bottom: 1.5rem; text-align: center; font-weight: 600; color: var(--text-color);">Available Reports</h2>
+                
+                <div class="button-layout">
+                    <div class="button-row">
+                        <button data-report-id="smart-analysis-btn" class="btn btn-smart" disabled>Find Root Causes</button>
+                        <button data-report-id="offline-stats-btn" class="btn" disabled>Offline Transaction Analysis</button>
+                    </div>
+                    <div class="button-row">
+                        <button data-report-id="scheme-stats-btn" class="btn" disabled>Get Scheme Statistics</button>
+                        <button data-report-id="bank-stats-btn" class="btn" disabled>Get Issuer Bank Statistics</button>
+                        <button data-report-id="application-stats-btn" class="btn" disabled>Get Application Statistics</button>
+                        <button data-report-id="store-stats-btn" class="btn" disabled>Get Store Statistics</button>
+                    </div>
+                    <div class="button-row">
+                        <button data-report-id="platform-stats-btn" class="btn" disabled>Get Platform Response Codes</button>
+                        <button data-report-id="card-entry-type-btn" class="btn" disabled>Get Card Entry Types</button>
+                        <button data-report-id="acceptance-method-btn" class="btn" disabled>Get Acceptance Methods</button>
+                    </div>
+                    <div class="button-row">
+                        <button data-report-id="time-diff-btn" class="btn" disabled>Time Difference Report</button>
+                        <button data-report-id="franchise-stores-btn" class="btn" disabled>FR Franchise Store Report</button>
+                        <button data-report-id="integre-stores-btn" class="btn" disabled>FR Integrated Store Report</button>
+                        <button data-report-id="crf-analysis-btn" class="btn" disabled>CRF Italy Acquirer Analysis</button>
+                        <button data-report-id="bank-code-analysis-btn" class="btn" disabled>Bank Code Analysis</button>
+                    </div>
+                </div>
+                <div id="report-params"></div>
+            </div>
+        </main>
+        
+        <div id="report-container">
+            </div>
+    </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script type="javascript/worker" id="worker">
+// This script runs in the background and will not freeze the UI.
+self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+
+const findHeader = (keys, possibleNames) => {
+    for (const name of possibleNames) {
+        const foundKey = keys.find(key => key.toLowerCase().trim() === name.toLowerCase());
+        if (foundKey) return foundKey;
+    }
+    return null;
+};
+
+function processAllReports(jsonData) {
+    const reportCache = {};
+    const keys = Object.keys(jsonData[0] || {});
+    
+    const headerMap = {
+        scheme: findHeader(keys, ["Scheme"]),
+        transactionStatus: findHeader(keys, ["Transaction status"]),
+        issuingBank: findHeader(keys, ["Issuing bank"]),
+        level1: findHeader(keys, ["Level 1", "Type", "Store Detail F", "Store Type"]),
+        level2: findHeader(keys, ["Level 2", "Store", "Store Detail G"]),
+        level3: findHeader(keys, ["Level 3", "Code", "Store Detail H"]),
+        appName: findHeader(keys, ["Application name", "Application Label"]),
+        platformRespCode: findHeader(keys, ["Platform Response Code"]),
+        cardEntryType: findHeader(keys, ["Card Entry Type"]),
+        acceptanceMethod: findHeader(keys, ["Acceptance Method"]),
+        mode: findHeader(keys, ["Mode"]), 
+        serverDate: findHeader(keys, ["Server Date"]),
+        receiptDate: findHeader(keys, ["Receipt Date"]),
+        pos: findHeader(keys, ["POS"]),
+        acquirerId: findHeader(keys, ["Acquirer ID"]),
+        bankCode: findHeader(keys, ["Bank code", "Bank Code"]),
+    };
+
+    function generateStats(groupByKey, outputHeaders) {
+        const groupByHeader = headerMap[groupByKey];
+        const statusHeader = headerMap.transactionStatus;
+        if (!groupByHeader || !statusHeader) return { data: [], headers: outputHeaders, options: {} };
+        const statsMap = new Map();
+        for (const row of jsonData) {
+            const groupKey = row[groupByHeader] || 'N/A';
+            if (!statsMap.has(groupKey)) statsMap.set(groupKey, { Approved: 0, Declined: 0, Total: 0 });
+            const stats = statsMap.get(groupKey);
+            stats.Total++;
+            const status = row[statusHeader];
+            if (status === 'Approved') stats.Approved++;
+            else if (status === 'Declined') stats.Declined++;
+        }
+        let results = [];
+        for (const [key, value] of statsMap.entries()) {
+            results.push({
+                [outputHeaders[0]]: key,
+                "Total Transactions": value.Total,
+                "Approved": value.Approved,
+                "Approved %": value.Total > 0 ? (value.Approved / value.Total) : 0,
+                "Declined": value.Declined,
+                "Declined %": value.Total > 0 ? (value.Declined / value.Total) : 0
+            });
+        }
+        results.sort((a, b) => b.Declined - a.Declined || b["Declined %"] - a["Declined %"]);
+        return { data: results, headers: outputHeaders, options: { formatPercent: ["Approved %", "Declined %"], conditionalFormat: { column: "Declined %", type: 'scale' } } };
+    }
+
+    function generateStoreStats() {
+        const storeHeaders = [headerMap.level1, headerMap.level2, headerMap.level3].filter(Boolean);
+        const statusHeader = headerMap.transactionStatus;
+        if (storeHeaders.length === 0 || !statusHeader) return { data: [], headers: ["Store", "Total Transactions", "Approved", "Approved %", "Declined", "Declined %"], options: {} };
+        const outputHeaders = [...storeHeaders, "Total Transactions", "Approved", "Approved %", "Declined", "Declined %"];
+        const statsMap = new Map();
+        for (const row of jsonData) {
+            const groupKey = storeHeaders.map(header => row[header] || '').join('|');
+            if (!groupKey) continue;
+            if (!statsMap.has(groupKey)) statsMap.set(groupKey, { Approved: 0, Declined: 0, Total: 0 });
+            const stats = statsMap.get(groupKey);
+            stats.Total++;
+            if (row[statusHeader] === 'Approved') stats.Approved++;
+            else if (row[statusHeader] === 'Declined') stats.Declined++;
+        }
+        let results = [];
+        for (const [key, value] of statsMap.entries()) {
+            const keyParts = key.split('|');
+            const resultRow = {};
+            storeHeaders.forEach((header, i) => { resultRow[header] = keyParts[i]; });
+            resultRow["Total Transactions"] = value.Total;
+            resultRow["Approved"] = value.Approved;
+            resultRow["Approved %"] = value.Total > 0 ? (value.Approved / value.Total) : 0;
+            resultRow["Declined"] = value.Declined;
+            resultRow["Declined %"] = value.Total > 0 ? (value.Declined / value.Total) : 0;
+            results.push(resultRow);
+        }
+        results.sort((a, b) => b.Declined - a.Declined || b["Declined %"] - a["Declined %"]);
+        return { data: results, headers: outputHeaders, options: { formatPercent: ["Approved %", "Declined %"], conditionalFormat: { column: "Declined %", type: 'scale' } } };
+    }
+    reportCache.schemeStats = generateStats("scheme", ["Scheme", "Total Transactions", "Approved", "Approved %", "Declined", "Declined %"]);
+    reportCache.bankStats = generateStats("issuingBank", ["Issuing Bank", "Total Transactions", "Approved", "Approved %", "Declined", "Declined %"]);
+    reportCache.applicationStats = generateStats("appName", ["Application name", "Total Transactions", "Approved", "Approved %", "Declined", "Declined %"]);
+    reportCache.platformStats = generateStats("platformRespCode", ["Platform Response Code", "Total Transactions", "Approved", "Approved %", "Declined", "Declined %"]);
+    reportCache.cardEntryTypeStats = generateStats("cardEntryType", ["Card Entry Type", "Total Transactions", "Approved", "Approved %", "Declined", "Declined %"]);
+    reportCache.storeStats = generateStoreStats();
+    return { reportCache, headerMap };
+}
+
+self.onmessage = function(e) {
+    const file = e.data;
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        try {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            if (!workbook.SheetNames || workbook.SheetNames.length === 0) throw new Error("No data sheets found in the file.");
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" });
+            if (jsonData.length === 0) throw new Error(`The first sheet ('${firstSheetName}') is empty.`);
+            const { reportCache, headerMap } = processAllReports(jsonData);
+            self.postMessage({ status: 'success', data: jsonData, cache: reportCache, headers: headerMap });
+        } catch (error) {
+            self.postMessage({ status: 'error', message: error.message });
+        }
+    };
+    reader.onerror = function() {
+        self.postMessage({ status: 'error', message: 'Failed to read the file in the background worker.' });
+    };
+    reader.readAsArrayBuffer(file);
+};
+</script>
+
+
+<script>
+// --- GLOBAL STATE ---
+let jsonData = null;
+let headerMap = null;
+let reportCache = {};
+let isFileLoaded = false;
+let isCountrySelected = false;
+let fileProcessingWorker;
+let currentChart = null; 
+
+// --- [ADDED] EMBEDDED BANK CODE DATA ---
+const bankCodeCSV = `Code Interbancaire,Libellé de l'établissement,Nom banque
+1,CRF Banque,CRF Banque
+6,Caisse des dépôts et consignations - fonds d'épargne,
+10000,Conecs,Conecs
+10008,CM-CIC Leasing Solutions,CMCIC
+10057,Banque CIC Sud Ouest,CMCIC
+10088,Société de promotion et de participation pour la coopération économique-Proparco,
+10096,Lyonnaise de banque 'L.B.',LB
+10107,BRED - Banque populaire,Banque Populaire
+10128,Intesa Sanpaolo SpA,Intesa
+10206,Caisse régionale de crédit agricole mutuel du Nord Est,Crédit Agricole
+10207,Banque populaire Rives de Paris,Banque Populaire
+10278,Caisse fédérale de crédit mutuel,CMCIC
+10548,Banque de Savoie,Banque de Savoie
+10550,Mercedes-Benz financial services France S.A.,
+10807,Banque populaire Bourgogne Franche-Comté,Banque Populaire
+10907,Banque populaire Aquitaine Centre Atlantique,Banque Populaire
+11006,Caisse régionale de crédit agricole mutuel de Champagne-Bourgogne,Crédit Agricole
+11128,BPCE lease,BPCE
+11138,BPCE Factor,BPCE
+11188,RCI Banque,
+11206,Caisse régionale de crédit agricole mutuel Nord Midi-Pyrénées,Crédit Agricole
+11306,Caisse régionale de crédit agricole mutuel de la Touraine et du Poitou,Crédit Agricole
+11315,Caisse d'épargne et de prévoyance Ile-de-France,Caisse d'épargne
+11406,Caisse régionale de crédit agricole mutuel du Centre Ouest,Crédit Agricole
+11506,Caisse régionale de crédit agricole mutuel de la Corse,Crédit Agricole
+11606,Caisse régionale de crédit agricole mutuel Sud Rhône Alpes,Crédit Agricole
+11706,Caisse régionale de crédit agricole mutuel du Val de France,Crédit Agricole
+11808,Caisse régionale de crédit agricole mutuel de Paris et d'Ile-de-France,Crédit Agricole
+12148,Crédit populaire européen,
+12206,Caisse régionale de crédit agricole mutuel de Charente-Périgord,Crédit Agricole
+12406,Caisse régionale de crédit agricole mutuel de la Charente-Maritime et des Deux-Sèvres,Crédit Agricole
+12506,Caisse régionale de crédit agricole mutuel de l'Anjou et du Maine,Crédit Agricole
+12739,Crédit agricole leasing and factoring,Crédit Agricole
+12806,Caisse régionale de crédit agricole mutuel Atlantique Vendée,Crédit Agricole
+13007,Banque Palatine,Banque Palatine
+13135,Caisse d'épargne et de prévoyance Bretagne Pays de Loire,Caisse d'épargne
+13335,Caisse d'épargne et de prévoyance de Normandie,Caisse d'épargne
+13485,BPCE,BPCE
+13506,Caisse régionale de crédit agricole mutuel de la Guadeloupe,Crédit Agricole
+13806,Caisse régionale de crédit agricole mutuel Alpes Provence,Crédit Agricole
+13825,Caisse d'épargne et de prévoyance Loire-Centre,Caisse d'épargne
+13906,Caisse régionale de crédit agricole mutuel d'Aquitaine,Crédit Agricole
+14135,Caisse d'épargne et de prévoyance de Midi-Pyrénées,Caisse d'épargne
+14255,Banque populaire du Sud,Banque Populaire
+14265,Caisse d'épargne et de prévoyance de Languedoc-Roussillon,Caisse d'épargne
+14445,Caisse d'épargne et de prévoyance d'Auvergne et du Limousin,Caisse d'épargne
+14485,Caisse d'épargne et de prévoyance de Bourgogne Franche-Comté,Caisse d'épargne
+14506,Caisse régionale de crédit agricole mutuel de Toulouse 31,Crédit Agricole
+14607,Caisse régionale de crédit agricole mutuel du Languedoc,Crédit Agricole
+14706,Caisse régionale de crédit agricole mutuel de Lorraine,Crédit Agricole
+14707,Banque populaire du Nord,Banque Populaire
+14745,Caisse d'épargne et de prévoyance Grand Est Europe,Caisse d'épargne
+14806,Caisse régionale de crédit agricole mutuel de la Martinique et de la Guyane,Crédit Agricole
+14906,Caisse régionale de crédit agricole mutuel de la Réunion,Crédit Agricole
+15135,Caisse d'épargne et de prévoyance de Provence-Alpes-Corse,Caisse d'épargne
+15489,Crédit agricole de la Réunion - caisse régionale de crédit agricole mutuel,Crédit Agricole
+15589,Crédit mutuel Arkéa,Crédit Mutuel
+15806,Caisse régionale de crédit agricole mutuel Pyrénées Gascogne,Crédit Agricole
+15906,Caisse régionale de crédit agricole mutuel de Franche-Comté,Crédit Agricole
+16235,Banque populaire Grand Ouest,Banque Populaire
+16406,Caisse régionale de crédit agricole mutuel Centre-est,Crédit Agricole
+16606,Caisse régionale de crédit agricole mutuel Centre France,Crédit Agricole
+16807,Caisse d'épargne et de prévoyance de Rhône Alpes,Caisse d'épargne
+16906,Caisse régionale de crédit agricole mutuel de la Normandie,Crédit Agricole
+16907,Banque populaire Auvergne Rhône Alpes,Banque Populaire
+17106,Caisse régionale de crédit agricole mutuel de l'Ile-de-France,Crédit Agricole
+17206,Caisse régionale de crédit agricole mutuel du Finistère,Crédit Agricole
+17306,Caisse régionale de crédit agricole mutuel des Côtes d'Armor,Crédit Agricole
+17406,Caisse régionale de crédit agricole mutuel de la Savoie,Crédit Agricole
+17515,Crédit mutuel de la vallée du rhone,Crédit Mutuel
+17565,Boursorama,Boursorama
+17706,Caisse régionale de crédit agricole mutuel du Morbihan,Crédit Agricole
+17807,Banque populaire Occitane,Banque Populaire
+17906,Caisse régionale de crédit agricole mutuel d'Ille-et-Vilaine,Crédit Agricole
+18006,Caisse régionale de crédit agricole mutuel des Savoie,Crédit Agricole
+18106,Caisse régionale de crédit agricole mutuel de Provence Côte d'Azur,Crédit Agricole
+18206,Caisse régionale de crédit agricole mutuel de Normandie-Seine,Crédit Agricole
+18306,Caisse régionale de crédit agricole mutuel de la Loire et de la Haute-Loire,Crédit Agricole
+18315,Caisse d'épargne et de prévoyance Côte d'Azur,Caisse d'épargne
+18506,Caisse régionale de crédit agricole mutuel Sud Méditerranée,Crédit Agricole
+18706,Caisse régionale de crédit agricole mutuel d'Alsace et des Vosges,Crédit Agricole
+18805,La Banque Postale,La Banque Postale
+19048,Crédit mutuel de la loire-atlantique et du centre-ouest,Crédit Mutuel
+19106,Caisse régionale de crédit agricole mutuel de la Brie Picardie,Crédit Agricole
+19306,Caisse régionale de crédit agricole mutuel du Nord de France,Crédit Agricole
+19406,Caisse régionale de crédit agricole mutuel de la Somme,Crédit Agricole
+19506,Caisse régionale de crédit agricole mutuel du Centre Loire,Crédit Agricole
+19895,Cofidis,Cofidis
+20041,La Banque Postale,La Banque Postale
+21229,Bank of America Europe Designated Activity Company,Bank Of America
+21609,Cofinoga,
+21833,Crédit agricole consumer finance,
+22008,Caisse de refinancement de l'habitat - CRH,
+22045,Crédit mutuel de la guyane et de la martinique,Crédit Mutuel
+22209,Banque Edel SNC,
+23048,Bank of China,
+23078,Aareal Bank AG,
+23178,State Bank of India,
+23488,Volkswagen Bank,
+23708,HSBC Trinkaus & Burkhardt AG,
+24209,Banque européenne du crédit mutuel,Crédit Mutuel
+24499,Citibank Europe,
+24559,Banque J. Safra Sarasin (Monaco) SA,
+24599,Milleis Banque,
+25833,Macquarie Bank Europe Designated Activity Company,
+27133,ABN Amro Bank NV,
+27733,CA Auto Bank S.p.A. Succursale en France,
+27800,KBC bank,
+30002,Crédit lyonnais LCL,Crédit Lyonnais
+30003,Société générale s.a.,Société Générale
+30004,BNP Paribas,BNPP
+30007,Natixis,
+30027,Banque CIC Nord Ouest,CIC
+30047,Banque CIC Ouest,CIC
+30051,Compagnie de financement foncier,
+30056,HSBC Continental Europe,
+30066,Crédit industriel et commercial - CIC,CIC
+30076,Crédit du Nord,Crédit du Nord
+30077,Société marseillaise de crédit,Société marseillaise de crédit
+30087,Banque CIC Est,CIC
+30438,ING Bank NV,
+30568,Banque Transatlantique S.A.,
+30588,Barclays Bank Ireland,
+30628,J.P. Morgan SE,
+30958,BNP Paribas Lease Group,
+31489,Crédit agricole corporate and investment bank,Crédit Agricole
+39996,Crédit Agricole,`;
+let bankMap = null;
+
+const countryReportConfig = {
+    france:  ["smart-analysis-btn", "offline-stats-btn", "scheme-stats-btn", "application-stats-btn", "bank-stats-btn", "store-stats-btn", "acceptance-method-btn", "platform-stats-btn", "card-entry-type-btn", "time-diff-btn", "franchise-stores-btn", "integre-stores-btn", "bank-code-analysis-btn"],
+    belgium: ["smart-analysis-btn", "offline-stats-btn", "scheme-stats-btn", "application-stats-btn", "bank-stats-btn", "store-stats-btn", "platform-stats-btn", "card-entry-type-btn", "time-diff-btn"],
+    spain:   ["smart-analysis-btn", "offline-stats-btn", "scheme-stats-btn", "application-stats-btn", "bank-stats-btn", "store-stats-btn", "platform-stats-btn", "card-entry-type-btn"],
+    italy:   ["smart-analysis-btn", "offline-stats-btn", "scheme-stats-btn", "application-stats-btn", "bank-stats-btn", "store-stats-btn", "platform-stats-btn", "card-entry-type-btn", "crf-analysis-btn"]
+};
+
+// --- INITIALIZATION ---
+function initializeWorker() {
+    try {
+        const workerScript = document.getElementById('worker').textContent;
+        const blob = new Blob([workerScript], { type: 'application/javascript' });
+        fileProcessingWorker = new Worker(URL.createObjectURL(blob));
+        fileProcessingWorker.onmessage = function(e) {
+            const { status, data, cache, headers, message } = e.data;
+            if (status === 'success') {
+                jsonData = data;
+                reportCache = cache;
+                headerMap = headers;
+                isFileLoaded = true;
+                setStatus(`✅ File loaded: <strong>${jsonData.length}</strong> rows processed. Ready to generate reports.`, 'success');
+                updateUIState();
+            } else {
+                handleFileError(message);
+            }
+        };
+        fileProcessingWorker.onerror = e => handleFileError(`An unexpected error occurred in the background processor: ${e.message}`);
+    } catch (e) {
+        console.error("Failed to initialize the Web Worker.", e);
+        alert("This browser does not support Web Workers. Please use a modern browser.");
+    }
+}
+
+// --- DOM & EVENT LISTENERS ---
+document.addEventListener('DOMContentLoaded', () => {
+    initializeWorker();
+    // Pre-parse the embedded bank code data
+    Papa.parse(bankCodeCSV, {
+        header: true,
+        skipEmptyLines: true,
+        complete: results => {
+            bankMap = new Map();
+            results.data.forEach(row => {
+                const code = row['Code Interbancaire'];
+                if (code) {
+                    bankMap.set(code, {
+                        name: row['Nom banque'] || 'N/A',
+                        label: row["Libellé de l'établissement"] || 'N/A'
+                    });
+                }
+            });
+        }
+    });
+    
+    document.getElementById('file-upload').addEventListener('change', handleFileSelect);
+    document.getElementById('country-select').addEventListener('change', handleCountrySelect);
+    document.getElementById('reset-app-btn').addEventListener('click', resetApplication);
+    document.querySelector('.button-layout').addEventListener('click', (event) => {
+        const button = event.target.closest('.btn');
+        if (!button || button.disabled) return;
+        handleReportButtonClick(button.dataset.reportId);
+    });
+});
+
+// --- CORE LOGIC & HANDLERS ---
+function resetApplication() {
+    jsonData = null; reportCache = {}; headerMap = null;
+    isFileLoaded = false; isCountrySelected = false;
+    document.getElementById('file-upload').value = '';
+    document.getElementById('country-select').value = '';
+    document.getElementById('report-container').innerHTML = '';
+    document.getElementById('report-params').style.display = 'none';
+    if(currentChart) { currentChart.destroy(); currentChart = null; }
+    setStatus('Please upload a file and select a country to begin.', 'info');
+    updateUIState();
+}
+
+function updateUIState() {
+    const reportsSection = document.getElementById('reports-section');
+    const allButtons = document.querySelectorAll('#reports-section .btn');
+    const selectedCountry = document.getElementById('country-select').value;
+    if (isFileLoaded && isCountrySelected) {
+        reportsSection.style.display = 'block';
+        const visibleButtons = countryReportConfig[selectedCountry] || [];
+        allButtons.forEach(btn => {
+            const reportId = btn.dataset.reportId;
+            const shouldBeVisible = visibleButtons.includes(reportId);
+            btn.style.display = shouldBeVisible ? '' : 'none';
+            btn.disabled = !shouldBeVisible;
+        });
+    } else {
+        reportsSection.style.display = 'none';
+        allButtons.forEach(btn => { btn.disabled = true; });
+    }
+}
+
+function setStatus(message, type = 'info') {
+    const statusEl = document.getElementById('status');
+    statusEl.innerHTML = message;
+    const styles = {
+        success: { bg: 'rgba(80, 227, 194, 0.1)', color: '#38bda0' },
+        error: { bg: 'rgba(208, 2, 27, 0.1)', color: '#D0021B' },
+        info: { bg: 'transparent', color: 'var(--text-color)' },
+        loading: { bg: 'rgba(74, 144, 226, 0.1)', color: 'var(--primary-color)' }
+    };
+    statusEl.style.backgroundColor = styles[type]?.bg || 'transparent';
+    statusEl.style.color = styles[type]?.color || 'var(--text-color)';
+}
+
+function handleCountrySelect(event) {
+    isCountrySelected = event.target.value !== "";
+    document.getElementById('report-container').innerHTML = '';
+    document.getElementById('report-params').style.display = 'none';
+    if(currentChart) { currentChart.destroy(); currentChart = null; }
+    updateUIState();
+}
+
+function handleFileError(message) {
+    isFileLoaded = false;
+    jsonData = null; reportCache = {}; headerMap = null;
+    setStatus(`❌ Error: ${message}`, 'error');
+    updateUIState();
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    isFileLoaded = false;
+    document.getElementById('report-container').innerHTML = '';
+    document.getElementById('report-params').style.display = 'none';
+    if(currentChart) { currentChart.destroy(); currentChart = null; }
+    updateUIState();
+    if (!file) { setStatus('Upload cancelled.', 'info'); return; }
+    setStatus(`<div class="loader"></div>Processing file... This may take a moment.`, 'loading');
+    fileProcessingWorker.postMessage(file);
+}
+
+function handleReportButtonClick(reportId) {
+    const paramsContainer = document.getElementById('report-params');
+    paramsContainer.style.display = 'none';
+    paramsContainer.innerHTML = '';
+    if(currentChart) { currentChart.destroy(); currentChart = null; }
+    const actions = {
+        'smart-analysis-btn': performSmartAnalysis,
+        'offline-stats-btn': () => renderReport(null, 'Offline Transaction Analysis', { directData: createOfflineTransactionReport() }),
+        'scheme-stats-btn': () => renderReport('schemeStats', 'Scheme Statistics', { chartType: 'bar' }),
+        'bank-stats-btn': () => renderReport('bankStats', 'Issuer Bank Statistics', { chartType: 'bar' }),
+        'store-stats-btn': () => renderReport('storeStats', 'Store Statistics'),
+        'application-stats-btn': () => renderReport('applicationStats', 'Application Statistics', { chartType: 'bar' }),
+        'platform-stats-btn': () => renderReport('platformStats', 'Platform Response Code Statistics', { chartType: 'bar' }),
+        'card-entry-type-btn': () => renderReport('cardEntryTypeStats', 'Card Entry Type Statistics', { chartType: 'pie' }),
+        'acceptance-method-btn': createAcceptanceMethodReport,
+        'time-diff-btn': () => renderReport(null, 'Time Differences (>4 minutes)', { directData: calculateTimeDifferenceReport() }),
+        'crf-analysis-btn': () => renderReport(null, 'CRF Italy Acquirer Analysis', { directData: createCRFAnalysisReport(), chartType: 'bar' }),
+        'franchise-stores-btn': () => setupParameterInput('CRF FR Franchise Store', 'Enter Bank Code (optional):', 'bankCode', (filter) => renderReport(null, 'Franchise Stores Report', { directData: createFranchiseStoresReport(filter) })),
+        'integre-stores-btn': () => setupParameterInput('CRF FR Integrated Store', 'Enter Issuing Bank (optional):', 'issuingBank', (filter) => renderReport(null, 'Integrated Stores Report', { directData: createIntegreStoresReport(filter) })),
+        'bank-code-analysis-btn': () => renderReport(null, 'Bank Code Analysis', { directData: createBankCodeAnalysisReport(), chartType: 'bar' })
+    };
+    if (actions[reportId]) actions[reportId]();
+    else alert(`Report '${reportId}' is not yet implemented.`);
+}
+
+
+// --- [MODIFIED] NEW FUNCTION FOR BANK CODE ANALYSIS ---
+function createBankCodeAnalysisReport() {
+    if (!jsonData || !bankMap) {
+        alert("Data not ready. Please ensure a file is loaded.");
+        return { data: [], headers: [] };
+    }
+    const h = headerMap;
+    if (!h.transactionStatus || !h.bankCode) {
+        alert("Required columns ('Transaction status' or 'Bank code') not found.");
+        return { data: [], headers: [] };
+    }
+
+    const statsMap = new Map();
+    jsonData.forEach(row => {
+        const bankCode = row[h.bankCode] || 'N/A';
+        if (!statsMap.has(bankCode)) {
+            statsMap.set(bankCode, { Approved: 0, Declined: 0, Total: 0 });
+        }
+        const stats = statsMap.get(bankCode);
+        stats.Total++;
+        const status = (row[h.transactionStatus] || "").toLowerCase();
+        if (status === 'approved') {
+            stats.Approved++;
+        } else if (status === 'declined') {
+            stats.Declined++;
+        }
+    });
+
+    const combinedData = Array.from(statsMap.entries()).map(([bankCode, stats]) => {
+        const details = bankMap.get(bankCode.toString()) || { name: 'Unknown', label: 'Unknown' };
+        return {
+            "Bank Name & Code": `${details.name} (${bankCode})`,
+            ...details,
+            ...stats,
+            "Approved %": stats.Total > 0 ? (stats.Approved / stats.Total) : 0,
+            "Declined %": stats.Total > 0 ? (stats.Declined / stats.Total) : 0
+        };
+    });
+
+    combinedData.sort((a, b) => b.Total - a.Total);
+    
+    return {
+        data: combinedData,
+        headers: ["Bank Name & Code", "Total Transactions", "Approved", "Declined", "Approved %", "Declined %"],
+        options: { formatPercent: ["Approved %", "Declined %"], conditionalFormat: { column: "Declined %", type: 'scale' } }
+    };
+}
+
+
+// --- ROOT CAUSE ANALYSIS FEATURE ---
+function findTopCorrelation(data, header, dimensionName, threshold) {
+    if (!header || data.length === 0) return null;
+    const counts = new Map();
+    data.forEach(row => {
+        const key = row[header] || 'N/A';
+        counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    if (counts.size === 0) return null;
+    const topItem = [...counts.entries()].reduce((a, b) => b[1] > a[1] ? b : a);
+    const percentage = topItem[1] / data.length;
+    if (percentage >= threshold) {
+        return { value: topItem[0], percentage: percentage, count: topItem[1] };
+    }
+    return null;
+}
+
+function performSmartAnalysis() {
+    if (!jsonData || jsonData.length === 0 || !headerMap.transactionStatus) return alert("Required data or 'Transaction status' column not found.");
+    const MIN_TX_FOR_ANALYSIS = 20;
+    const CORRELATION_THRESHOLD = 0.4;
+    const declinedTx = jsonData.filter(r => r[headerMap.transactionStatus] === 'Declined');
+    const overallDeclineRate = jsonData.length > 0 ? (declinedTx.length / jsonData.length) : 0;
+    const DECLINE_RATE_THRESHOLD_ABSOLUTE = 0.15;
+    const DECLINE_RATE_THRESHOLD_RELATIVE = Math.max(overallDeclineRate * 2.5, 0.05);
+    let findings = {
+        summary: { totalTx: jsonData.length, totalDeclined: declinedTx.length, overallDeclineRate },
+        issues: []
+    };
+    const primaryDimensions = [
+        { name: 'Scheme', header: headerMap.scheme, cacheKey: 'schemeStats' },
+        { name: 'Issuing Bank', header: headerMap.issuingBank, cacheKey: 'bankStats' },
+        { name: 'Application name', header: headerMap.appName, cacheKey: 'applicationStats' },
+    ];
+    const correlationHierarchy = [
+        { name: 'Platform Response Code', header: headerMap.platformRespCode },
+        { name: 'Scheme', header: headerMap.scheme },
+        { name: 'Card Entry Type', header: headerMap.cardEntryType },
+        { name: 'Application name', header: headerMap.appName },
+    ];
+    primaryDimensions.forEach(dim => {
+        const reportData = reportCache[dim.cacheKey]?.data;
+        if (!reportData) return;
+        reportData.forEach(item => {
+            if (item["Total Transactions"] < MIN_TX_FOR_ANALYSIS) return;
+            const declineRate = item["Declined %"];
+            if (declineRate >= DECLINE_RATE_THRESHOLD_ABSOLUTE || declineRate >= DECLINE_RATE_THRESHOLD_RELATIVE) {
+                const itemName = item[dim.name];
+                let issue = {
+                    dimension: dim.name, value: itemName, declineRate,
+                    totalTransactions: item["Total Transactions"],
+                    declinedCount: item["Declined"],
+                    correlations: [],
+                    summary: ''
+                };
+                let currentSubset = declinedTx.filter(r => r[dim.header] === itemName);
+                let focusSummary = [];
+                correlationHierarchy.forEach((corrDim, index) => {
+                    if (corrDim.header === dim.header || !corrDim.header || currentSubset.length < 10) return;
+                    const correlation = findTopCorrelation(currentSubset, corrDim.header, corrDim.name, CORRELATION_THRESHOLD);
+                    if (correlation) {
+                        const label = issue.correlations.length === 0 ? "Primary Cause" : "Secondary Cause";
+                        const text = `<b>${(correlation.percentage * 100).toFixed(0)}%</b> of these declines are linked to <b>${corrDim.name} '${correlation.value}'</b>.`;
+                        issue.correlations.push({label, text});
+                        focusSummary.push(`'${correlation.value}'`);
+                        currentSubset = currentSubset.filter(r => r[corrDim.header] === correlation.value);
+                    }
+                });
+                if (issue.correlations.length === 0) {
+                     issue.correlations.push({label: "Root Cause", text: 'No single strong correlation found. Declines may be widespread.'});
+                }
+                issue.summary = focusSummary.length > 0 ? `Focus investigation on declines for <b>${itemName}</b> where the cause is related to ${focusSummary.join(' → ')}.` : `No specific focus area identified for <b>${itemName}</b>.`;
+                findings.issues.push(issue);
+            }
+        });
+    });
+    findings.issues.sort((a, b) => b.totalTransactions - a.totalTransactions || b.declineRate - a.declineRate);
+    renderSmartAnalysisReport(findings);
+}
+
+function renderSmartAnalysisReport(findings) {
+    const container = document.getElementById('report-container');
+    const { summary, issues } = findings;
+    let html = `
+        <div class="report-header"><h2>Root Cause Analysis</h2></div>
+        <div class="report-section smart-summary">
+            <div class="summary-card">
+                <h3>Overall Performance Summary</h3>
+                <div class="quick-stats">
+                    <div class="stat"><div class="stat-value neutral">${summary.totalTx.toLocaleString()}</div><div class="stat-label">Total Transactions</div></div>
+                    <div class="stat"><div class="stat-value">${summary.totalDeclined.toLocaleString()}</div><div class="stat-label">Total Declined</div></div>
+                    <div class="stat"><div class="stat-value">${(summary.overallDeclineRate * 100).toFixed(2)}%</div><div class="stat-label">Overall Decline Rate</div></div>
+                </div>
+            </div>`;
+    if (issues.length > 0) {
+        issues.forEach(issue => {
+            const comparisonRate = summary.overallDeclineRate > 0 ? (issue.declineRate / summary.overallDeclineRate).toFixed(1) : 'N/A';
+            html += `
+            <div class="summary-card issue-card">
+                <h3>High Decline Rate: ${issue.dimension} '${issue.value}'</h3>
+                <div class="quick-stats">
+                    <div class="stat"><div class="stat-value">${(issue.declineRate * 100).toFixed(2)}%</div><div class="stat-label">Decline Rate</div></div>
+                    <div class="stat"><div class="stat-value neutral">${comparisonRate}x</div><div class="stat-label">vs. Average</div></div>
+                    <div class="stat"><div class="stat-value neutral">${issue.totalTransactions.toLocaleString()}</div><div class="stat-label">Total Transactions</div></div>
+                </div>
+                <div class="root-cause-section">
+                    <h4>Potential Root Causes:</h4>
+                    <ul>${issue.correlations.map(c => `<li><strong>${c.label}:</strong> ${c.text}</li>`).join('')}</ul>
+                </div>
+                <div class="focus-section"><h4>Recommended Focus:</h4><p>${issue.summary}</p></div>
+            </div>`;
+        });
+    } else {
+        html += `<div class="summary-card" style="border-left-color: var(--smart-action-color);"><h3 style="color: var(--smart-action-color);">✅ No Significant Issues Found</h3><p>The analysis did not detect any areas with decline rates that cross the defined critical thresholds.</p></div>`;
+    }
+    container.innerHTML = html + '</div>';
+}
+
+// --- OTHER REPORTING & UTILITY FUNCTIONS ---
+function createOfflineTransactionReport() {
+    const h = headerMap;
+    if (!h.mode || !h.level1) {
+        alert(`Error: Required column 'Mode' or store details not found for Offline Transaction Analysis.`);
+        return { data: [], headers: [] };
+    }
+    const storeStats = new Map();
+    const storeNameHeaders = [h.level1, h.level2, h.level3].filter(Boolean);
+    jsonData.forEach(row => {
+        const storeKey = storeNameHeaders.map(header => row[header] || '').filter(Boolean).join(' - ');
+        if (!storeKey) return;
+        if (!storeStats.has(storeKey)) storeStats.set(storeKey, { totalTx: 0, offlineTx: 0 });
+        storeStats.get(storeKey).totalTx++;
+        const mode = (row[h.mode] || "").toLowerCase();
+        if (mode === 'offline') {
+            storeStats.get(storeKey).offlineTx++;
+        }
+    });
+    const results = [];
+    storeStats.forEach((stats, store) => {
+        if (stats.offlineTx > 0) {
+            results.push({
+                "Store": store,
+                "Offline Transactions": stats.offlineTx,
+                "Total Store Transactions": stats.totalTx,
+                "Offline % of Store Total": stats.totalTx > 0 ? (stats.offlineTx / stats.totalTx) : 0
+            });
+        }
+    });
+    results.sort((a, b) => b["Offline Transactions"] - a["Offline Transactions"]);
+    return { 
+        data: results, 
+        headers: ["Store", "Offline Transactions", "Total Store Transactions", "Offline % of Store Total"],
+        options: { formatPercent: ["Offline % of Store Total"] }
+    };
+}
+
+function setupParameterInput(title, label, placeholder, callback) {
+    const paramsContainer = document.getElementById('report-params');
+    paramsContainer.innerHTML = `<label for="param-input">${label}</label> <input type="text" id="param-input" placeholder="${placeholder}"> <button id="param-generate-btn" class="btn">Generate Report</button>`;
+    paramsContainer.style.display = 'flex';
+    paramsContainer.style.alignItems = 'center';
+    document.getElementById('param-generate-btn').onclick = () => callback(document.getElementById('param-input').value.trim());
+    document.getElementById('param-input').onkeyup = e => { if (e.key === 'Enter') document.getElementById('param-generate-btn').click(); };
+}
+
+function createFranchiseStoresReport(filterBankCode = '') {
+    const h = headerMap;
+    if (!h.level1 || !h.appName || !h.transactionStatus || !h.bankCode) { alert(`Error: Required columns not found.`); return { data: [], headers: [] }; }
+    const resultDict = new Map();
+    const bankCodeToFilter = filterBankCode.toLowerCase();
+    jsonData.forEach(row => {
+        const storeType = (row[h.level1] || "").toLowerCase();
+        const appLabel = row[h.appName] || "";
+        const txStatus = (row[h.transactionStatus] || "").toLowerCase();
+        const bankCode = (row[h.bankCode] || "").toString().trim().toLowerCase();
+        if (storeType.includes("franchise") && (appLabel === "EMV Sans Contact" || appLabel === "EMV FR")) {
+            if (bankCodeToFilter === "" || bankCode === bankCodeToFilter) {
+                if (!resultDict.has(row[h.level1])) resultDict.set(row[h.level1], { Approved: 0, Declined: 0 });
+                const counts = resultDict.get(row[h.level1]);
+                if (txStatus === "approved") counts.Approved++; else if (txStatus === "declined") counts.Declined++;
+            }
+        }
+    });
+    const results = [];
+    resultDict.forEach((counts, storeType) => {
+        const total = counts.Approved + counts.Declined;
+        results.push({ "Store Type": storeType, Approved: counts.Approved, Declined: counts.Declined, Total: total, "Approved %": total > 0 ? (counts.Approved / total) : 0, "Declined %": total > 0 ? (counts.Declined / total) : 0 });
+    });
+    return { data: results, headers: ["Store Type", "Approved", "Declined", "Total", "Approved %", "Declined %"], options: { formatPercent: ["Approved %", "Declined %"] } };
+}
+
+function createIntegreStoresReport(filterBankName = '') {
+    const h = headerMap;
+    if (!h.level1 || !h.appName || !h.transactionStatus || !h.issuingBank) { alert(`Error: Required columns not found.`); return { data: [], headers: [] }; }
+    const resultDict = new Map();
+    const bankNameToFilter = filterBankName.toLowerCase();
+    jsonData.forEach(row => {
+        const storeType = (row[h.level1] || "").toLowerCase();
+        const appLabel = row[h.appName] || "";
+        const txStatus = (row[h.transactionStatus] || "").toLowerCase();
+        const issuingBank = (row[h.issuingBank] || "").toLowerCase();
+        if (storeType.includes("integre") || storeType.includes("excora")) {
+            if (appLabel === "Sepafast") {
+                if (bankNameToFilter === "" || issuingBank === bankNameToFilter) {
+                    if (!resultDict.has(row[h.level1])) resultDict.set(row[h.level1], { Approved: 0, Declined: 0 });
+                    const counts = resultDict.get(row[h.level1]);
+                    if (txStatus === "approved") counts.Approved++; else if (txStatus === "declined") counts.Declined++;
+                }
+            }
+        }
+    });
+    const results = [];
+    resultDict.forEach((counts, storeType) => {
+        const total = counts.Approved + counts.Declined;
+        results.push({ "Store Type": storeType, Approved: counts.Approved, Declined: counts.Declined, Total: total, "Approved %": total > 0 ? (counts.Approved / total) : 0, "Declined %": total > 0 ? (counts.Declined / total) : 0 });
+    });
+    return { data: results, headers: ["Store Type", "Approved", "Declined", "Total", "Approved %", "Declined %"], options: { formatPercent: ["Approved %", "Declined %"] } };
+}
+
+function createCRFAnalysisReport() {
+    const h = headerMap;
+    if (!h.acquirerId || !h.transactionStatus) { alert(`Error: Required columns not found.`); return { data: [], headers: [] }; }
+    const acquirerMap = new Map([["1005", "Axepta"], ["1025", "Mercury"], ["9509", "Poste Italiane"], ["40105611508", "MPG"], ["AMEX", "Amex"]]);
+    const resultDict = new Map();
+    jsonData.forEach(row => {
+        const acqID = String(row[h.acquirerId] || "").trim();
+        if (acquirerMap.has(acqID)) {
+            const key = `${acquirerMap.get(acqID)} (${acqID})`;
+            const status = (row[h.transactionStatus] || "").toLowerCase();
+            if (!resultDict.has(key)) resultDict.set(key, { Total: 0, Approved: 0, Declined: 0 });
+            const val = resultDict.get(key);
+            val.Total++;
+            if (status === "approved") val.Approved++; else if (status === "declined") val.Declined++;
+        }
+    });
+    let results = [];
+    resultDict.forEach((val, key) => {
+        results.push({ "Acquirer": key, "Total Tx": val.Total, "Approved": val.Approved, "Declined": val.Declined, "% Approved": val.Total > 0 ? val.Approved / val.Total : 0, "% Declined": val.Total > 0 ? val.Declined / val.Total : 0 });
+    });
+    results.sort((a, b) => b["% Declined"] - a["% Declined"]);
+    return { data: results, headers: ["Acquirer", "Total Tx", "Approved", "Declined", "% Approved", "% Declined"], options: { formatPercent: ["% Approved", "% Declined"] } };
+}
+
+function calculateTimeDifferenceReport() {
+    const h = headerMap;
+    if ([h.serverDate, h.receiptDate, h.level1].some(c => !c)) { alert(`Error: Required columns not found.`); return { data: [], headers: [] }; }
+    const results = [];
+    jsonData.forEach(row => {
+        const receiptTime = new Date(row[h.receiptDate]);
+        const serverTime = new Date(row[h.serverDate]);
+        if (!isNaN(receiptTime) && !isNaN(serverTime)) {
+            const diffSeconds = (serverTime.getTime() - receiptTime.getTime()) / 1000;
+            if (diffSeconds > 240) {
+                results.push({ "Type": row[h.level1], "Store": row[h.level2], "Code": row[h.level3], "Receipt Date": row[h.receiptDate], "Server Date": row[h.serverDate], "Time Difference (minutes)": diffSeconds / 60, "POS": row[h.pos] });
+            }
+        }
+    });
+    results.sort((a, b) => (a.Type || '').localeCompare(b.Type || '') || (a.Store || '').localeCompare(b.Store || '') || (a.Code || '').localeCompare(b.Code || '') || (a.POS || '').localeCompare(b.POS || '') || b["Time Difference (minutes)"] - a["Time Difference (minutes)"]);
+    return { data: results, headers: ["Type", "Store", "Code", "Receipt Date", "Server Date", "Time Difference (minutes)", "POS"] };
+}
+
+function createAcceptanceMethodReport() {
+    const h = headerMap;
+    if (!h.acceptanceMethod || !h.transactionStatus || !h.level1) { return alert(`Error: Required columns for Acceptance Method report not found.`); }
+    const container = document.getElementById('report-container');
+    container.innerHTML = `<div class="report-header"><h2>Acceptance Method Decline Analysis</h2></div>`;
+    const methods = ['Acquirer', 'Acceptor', 'Issuer', 'Offline'];
+    methods.forEach(methodName => {
+        let totalApproved = 0, totalDeclined = 0;
+        const declinedStores = new Map();
+        jsonData.forEach(row => {
+            if ((row[h.acceptanceMethod] || "").toLowerCase() === methodName.toLowerCase()) {
+                const status = (row[h.transactionStatus] || "").toLowerCase();
+                if (status === 'approved') totalApproved++;
+                else if (status === 'declined') {
+                    totalDeclined++;
+                    const storeKey = [row[h.level1], row[h.level2], row[h.level3]].map(s => s || "").join('|');
+                    if (storeKey !== '||') declinedStores.set(storeKey, { 'Store Detail F': row[h.level1] || '', 'Store Detail G': row[h.level2] || '', 'Store Detail H': row[h.level3] || '' });
+                }
+            }
+        });
+        const totalRelevant = totalApproved + totalDeclined;
+        const declinedPercentage = totalRelevant > 0 ? (totalDeclined / totalRelevant) : 0;
+        let sectionHtml = `<div class="report-section acceptance-method-section"><h3>${methodName} Decline Analysis</h3>`;
+        sectionHtml += `<table class="summary-table">
+            <tr><td>Total '${methodName}' Transactions (Declined):</td><td>${totalDeclined}</td></tr>
+            <tr><td>Total '${methodName}' Transactions (Approved):</td><td>${totalApproved}</td></tr>
+            <tr><td>Declined % of Relevant (Approved+Declined):</td><td>${(declinedPercentage * 100).toFixed(2)}%</td></tr>
+        </table>`;
+        if (declinedStores.size > 0) {
+            sectionHtml += `<h4>Stores Associated with '${methodName}' Declined Transactions:</h4>`;
+            const storeData = Array.from(declinedStores.values());
+            const storeHeaders = ['Store Detail F', 'Store Detail G', 'Store Detail H'];
+            sectionHtml += `<table><thead><tr>${storeHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+            storeData.forEach(store => sectionHtml += `<tr><td>${store['Store Detail F']}</td><td>${store['Store Detail G']}</td><td>${store['Store Detail H']}</td></tr>`);
+            sectionHtml += `</tbody></table>`;
+        }
+        sectionHtml += `</div>`;
+        container.innerHTML += sectionHtml;
+    });
+}
+
+function renderReport(cacheKey, title, { chartType, directData } = {}) {
+    const container = document.getElementById('report-container');
+    const reportData = directData ? directData : (reportCache[cacheKey] || {});
+    const { data, headers, options = {} } = reportData;
+    if (!data || data.length === 0) {
+        container.innerHTML = `<div class="report-header"><h2>${title}</h2></div><p>No data to display for this report.</p>`;
+        return;
+    }
+    let html = `<div class="report-header"><h2>${title}</h2><button class="btn btn-export" onclick="exportTableToCSV('${title.replace(/ /g, '_')}.csv', ${JSON.stringify(headers).replace(/"/g, "'")})">Export to CSV</button></div>`;
+    const hasChart = chartType && ['bar', 'pie'].includes(chartType);
+    html += `<div class="report-section"><div class="${hasChart ? 'chart-table-grid' : ''}">`;
+    if (hasChart) html += `<div class="chart-container"><canvas id="reportChart"></canvas></div>`;
+    html += `<div><table id="report-table"><thead><tr>${headers.map((h, i) => `<th onclick="sortTable(this, ${i})">${h}<span class="sort-indicator"></span></th>`).join('')}</tr></thead><tbody>`;
+    data.forEach(row => {
+        html += '<tr>';
+        headers.forEach(header => {
+            let value = row[header], cellStyle = '', displayValue = value;
+            if (options.formatPercent?.includes(header) && typeof value === 'number') displayValue = (value * 100).toFixed(2) + '%';
+            else if (typeof value === 'number' && !Number.isInteger(value)) displayValue = value.toFixed(2);
+            if (options.conditionalFormat?.column === header) {
+                const color = getColorForScale(value, data.map(r => r[header]));
+                if(color) cellStyle = `style="background-color: ${color}; color: white; font-weight: bold;"`;
+            }
+            html += `<td ${cellStyle}>${displayValue ?? ''}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table></div></div></div>';
+    container.innerHTML = html;
+    if (hasChart) {
+        const ctx = document.getElementById('reportChart').getContext('2d');
+        const labels = data.slice(0, 15).map(r => r[headers[0]]);
+        let chartConfig;
+        if (chartType === 'bar') {
+            chartConfig = { type: 'bar', data: { labels: labels, datasets: [{ label: 'Approved', data: data.slice(0, 15).map(r => r['Approved']), backgroundColor: 'rgba(80, 227, 194, 0.7)' }, { label: 'Declined', data: data.slice(0, 15).map(r => r['Declined']), backgroundColor: 'rgba(208, 2, 27, 0.6)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } };
+        } else if (chartType === 'pie') {
+            chartConfig = { type: 'pie', data: { labels: labels.slice(0,10), datasets: [{ data: data.slice(0, 10).map(r => r['Total Transactions']), backgroundColor: ['#4A90E2', '#50E3C2', '#F5A623', '#BD10E0', '#D0021B', '#417505', '#9013FE', '#B8E986', '#7ED321', '#E83E8C'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } };
+        }
+        currentChart = new Chart(ctx, chartConfig);
+    }
+}
+
+function sortTable(headerCell, colIndex) {
+    const table = headerCell.closest('table');
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    let sortOrder = 'asc';
+    if(headerCell.dataset.sortOrder === 'asc') {
+        sortOrder = 'desc';
+    }
+    headerCell.dataset.sortOrder = sortOrder;
+    table.querySelectorAll('th').forEach(th => th.dataset.sortOrder = '');
+    table.querySelectorAll('th .sort-indicator').forEach(ind => ind.textContent = '');
+    headerCell.querySelector('.sort-indicator').textContent = sortOrder === 'asc' ? ' ▲' : ' ▼';
+    rows.sort((a, b) => {
+        const aText = a.cells[colIndex]?.textContent.trim() || '', bText = b.cells[colIndex]?.textContent.trim() || '';
+        const aNum = parseFloat(aText.replace(/%|,/g,'')), bNum = parseFloat(bText.replace(/%|,/g,''));
+        let comparison = !isNaN(aNum) && !isNaN(bNum) ? aNum - bNum : aText.localeCompare(bText, undefined, {numeric: true});
+        return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+function exportTableToCSV(filename, headers) {
+    const table = document.querySelector("#report-container table"); if (!table) return;
+    const rows = Array.from(table.querySelectorAll("tr"));
+    let csvContent = "data:text/csv;charset=utf-8," + headers.map(h => `"${h}"`).join(",") + "\n";
+    for(let i = 1; i < rows.length; i++) {
+        let row = [], cols = rows[i].querySelectorAll("td");
+        cols.forEach(col => { let data = col.innerText.replace(/"/g, '""'); if (data.includes(',')) data = `"${data}"`; row.push(data); });
+        csvContent += row.join(",") + "\n";
+    }
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", filename);
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+function getColorForScale(value, columnData) {
+    if (typeof value !== 'number') return null;
+    const numericData = columnData.filter(v => typeof v === 'number' && isFinite(v));
+    if (numericData.length < 2) return null;
+    const min = Math.min(...numericData), max = Math.max(...numericData);
+    if (min === max) return 'rgba(80, 227, 194, 0.7)';
+    const percent = (value - min) / (max - min);
+    const r = Math.round(Math.min(255, 255 * (percent * 2)));
+    const g = Math.round(Math.min(255, 255 * ((1-percent) * 2)));
+    return `rgba(${r}, ${g}, 50, 0.7)`;
+}
+
+</script>
+</body>
+</html>
